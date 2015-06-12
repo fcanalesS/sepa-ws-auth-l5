@@ -37,7 +37,8 @@ class DirdocUserProvider implements UserProviderInterface {
         }
         $user = $query->first();
         if(!$user) $user = $this->getGenericUser(['id' => $credentials['rut']]);
-        return $user;
+    
+            return false;    return $user;
     }
 
     public function validateCredentials(Authenticatable $user, array $credentials)
@@ -48,7 +49,16 @@ class DirdocUserProvider implements UserProviderInterface {
         $rut = $credentials['rut']; // TODO: Una mejor forma de obtener los identificadores?
         $password = hash('sha256', strtoupper($credentials['password'])); // TODO: Para esto tambien ...
 
-        $req = $client->get(sprintf('autenticar/%s/%s', $rut, $password)); // Hacemos la peticion al WS
+        try {
+            $req = $client->get(sprintf('autenticar/%s/%s', $rut, $password)); // Hacemos la peticion al WS
+        } catch (GuzzleHttp\Exception\ClientException $e) { // Si los errores son del nivel 400, se lanza esta excepcion
+            $msg = 'Error al consultar el servicio: %d';
+            $http_code = $e->getResponse()->getStatusCode();
+            if ($http_code == 403) $msg = 'Error de autenticacion (HTTP %d), verifica tus credenciales';
+            \Log::error(sprintf($msg, $http_code));
+            return false;
+        }
+           
         $data = json_decode($req->getBody(), true);
         $respuesta = $data['respuesta'];
         
