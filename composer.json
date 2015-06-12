@@ -1,0 +1,18 @@
+{
+    "name": "utem/dirdoc-auth",
+    "description": "Funciones utilitarias UTEM",
+    "license": "GPLv2",
+    "keywords": ["dirdoc", "laravel", "auth"],
+    "authors": [
+        {
+            "name": "Patricio PÃrez Valverde",
+            "email": "pperez@boaboa.org"
+        }
+    ],
+    "require": {},
+    "autoload": {
+        "psr-4": {
+            "UTEM\\Dirdoc\\": "src"
+        }
+    }
+}
