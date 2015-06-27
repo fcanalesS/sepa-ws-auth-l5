@@ -55,7 +55,7 @@ class DirdocUserProvider implements UserProviderInterface
     {
         $rut = \UTEM\Utils\Rut::isRut($credentials['rut']) ? \UTEM\Utils\Rut::rut($credentials['rut']) : $credentials['rut'];
 
-        return $this->createModel()->findOrCreate($rut);
+        return $this->createModel()->firstOrCreate(['rut' => $rut]);
     }
 
     /**
@@ -97,10 +97,9 @@ class DirdocUserProvider implements UserProviderInterface
      */
     public function retrieveById($identifier)
     {
-        $user = $this->createModel();
         $rut = \UTEM\Utils\Rut::isRut($identifier) ? \UTEM\Utils\Rut::rut($identifier) : $identifier; // Solo queremos el rut
         \Log::debug(sprintf('Auth: Logeando al rut "%s" mediante id'));
-        return $user->findOrCreate($rut); // Si o si creamos un usuario, ya que no hay forma de saber si el user esta en dirdoc
+        return $this->createModel()->firstOrCreate(['rut' => $rut]); // Si o si creamos un usuario, ya que no hay forma de saber si el user esta en dirdoc
     }
 
     /**
