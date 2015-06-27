@@ -6,7 +6,8 @@ use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Auth\GenericUser;
 use GuzzleHttp;
 
-class DirdocUserProvider implements UserProviderInterface {
+class DirdocUserProvider implements UserProviderInterface
+{
 
     protected $model; // Un string de perros indicando cual es el modelo usado. ej: App\User
     protected $ws_base_uri;
@@ -27,18 +28,17 @@ class DirdocUserProvider implements UserProviderInterface {
     {
         $query = $this->createModel()->newQuery();
 
-        foreach ($credentials as $key => $value)
-        {
-	    if ( ! str_contains($key, 'password'))
-	    {
+        foreach ($credentials as $key => $value) {
+            if (!str_contains($key, 'password')) {
                 if (str_contains($key, 'rut')) $value = \UTEM\Utils\Rut::rut($value);
-	        $query->where($key, $value);
+                $query->where($key, $value);
             }
         }
         $user = $query->first();
-        if(!$user) $user = $this->getGenericUser(['id' => $credentials['rut']]);
-    
-            return false;    return $user;
+        if (!$user) $user = $this->getGenericUser(['id' => $credentials['rut']]);
+
+        return false;
+        return $user;
     }
 
     public function validateCredentials(Authenticatable $user, array $credentials)
@@ -58,11 +58,11 @@ class DirdocUserProvider implements UserProviderInterface {
             \Log::error(sprintf($msg, $http_code));
             return false;
         }
-           
+
         $data = json_decode($req->getBody(), true);
         $respuesta = $data['resultado'];
-        
-        if(is_a($user, '\Illuminate\Auth\GenericUser')) // Nos llego un GenericUser, persistamos al usuario en DB
+
+        if (is_a($user, '\Illuminate\Auth\GenericUser')) // Nos llego un GenericUser, persistamos al usuario en DB
         {
             $user = $this->createModel(); // Nueva instancia del modelo
             $rut = \UTEM\Utils\Rut::rut($rut); // Pasa el rut a integer
@@ -70,7 +70,7 @@ class DirdocUserProvider implements UserProviderInterface {
             $user->save();
         } // Si no es un GenericUser, implica que ya estaba en DB, continuamos ...
 
-        return (bool) $respuesta;
+        return (bool)$respuesta;
     }
 
     public function retrieveById($identifier)
@@ -90,15 +90,14 @@ class DirdocUserProvider implements UserProviderInterface {
 
     public function createModel()
     {
-        $class = '\\'.ltrim($this->model, '\\');
+        $class = '\\' . ltrim($this->model, '\\');
         return new $class;
     }
 
     public function getGenericUser($user)
     {
-        if ($user !== null)
-        {
-            return new GenericUser((array) $user);
+        if ($user !== null) {
+            return new GenericUser((array)$user);
         }
     }
 }
