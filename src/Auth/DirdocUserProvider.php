@@ -16,7 +16,7 @@ class DirdocUserProvider implements UserProviderInterface
     protected $model;
 
     /**
-     * La uri del servicio REST
+     * La uri base del servicio REST
      *
      * @var string
      */
@@ -76,15 +76,15 @@ class DirdocUserProvider implements UserProviderInterface
         try {
             $req = $client->get(sprintf('autenticar/%s/%s', $rut, $password)); // Hacemos la peticion al WS
         } catch (GuzzleHttp\Exception\ClientException $e) { // Si los errores son del nivel 400, se lanza esta excepcion
-            $msg = 'Error al consultar el servicio: %d';
-            $http_code = $e->getResponse()->getStatusCode();
-            if ($http_code == 403) $msg = 'Error de autenticacion (HTTP %d), verifica tus credenciales';
-            \Log::error(sprintf($msg, $http_code));
+            $msg = 'Error al consultar el servicio: %d(%s)';
+            \Log::error(sprintf($msg, $e->getResponse()->getStatusCode(), $e->getResponse()->getReasonPhrase()));
             return false;
         }
 
         $data = json_decode($req->getBody(), true);
         $respuesta = $data['resultado'];
+        if ($respuesta) \Log::info(sprintf('Auth: Login exitoso (%s)', $rut));
+        else \Log::info(sprintf('Auth: Login fallido (%s)', $rut));
 
         return (bool)$respuesta;
     }
@@ -113,6 +113,7 @@ class DirdocUserProvider implements UserProviderInterface
     {
         $model = $this->createModel();
         $rut = \UTEM\Utils\Rut::isRut($identifier) ? \UTEM\Utils\Rut::rut($identifier) : $identifier;
+        \Log::info(sprintf('Auth: Intentando login por token (%s: %s)', $rut, $token));
         return $model->newQuery()
             ->where($model->getKeyName(), $rut)
             ->where($model->getRememberTokenName(), $token)
