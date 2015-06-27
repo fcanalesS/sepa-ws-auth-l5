@@ -78,17 +78,23 @@ class DirdocUserProvider implements UserProviderInterface
         $user = $this->createModel();
         $rut = \UTEM\Utils\Rut::isRut($identifier) ? \UTEM\Utils\Rut::rut($identifier) : $identifier; // Solo queremos el rut
         \Log::debug(sprintf('Auth: Logeando al rut "%s" mediante id'));
-        return $user->findOrCreate($rut);
+        return $user->findOrCreate($rut); // Si o si creamos un usuario, ya que no hay forma de saber si el user esta en dirdoc
     }
 
     public function retrieveByToken($identifier, $token)
     {
-
+        $model = $this->createModel();
+        $rut = \UTEM\Utils\Rut::isRut($identifier) ? \UTEM\Utils\Rut::rut($identifier) : $identifier;
+        return $model->newQuery()
+            ->where($model->getKeyName(), $identifier)
+            ->where($model->getRememberTokenName(), $token)
+            ->first();
     }
 
     public function updateRememberToken(Authenticatable $user, $token)
     {
-
+        $user->setRememberToken($token);
+        $user->save();
     }
 
     public function createModel()
