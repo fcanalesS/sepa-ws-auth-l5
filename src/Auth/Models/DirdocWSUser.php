@@ -11,5 +11,9 @@ class DirdocWSUser extends Model implements AuthenticatableContract
 
     use Authenticatable;
 
+    protected $table = 'usuarios';
+    protected $primaryKey = 'rut';
+    protected $incrementing = false;
+
     protected $fillable = ['rut', 'nombres', 'apellidos', 'email'];
 }
