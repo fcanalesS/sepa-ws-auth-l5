@@ -10,15 +10,15 @@ class DirdocUserProvider implements UserProviderInterface
 {
 
     protected $model; // Un string de perros indicando cual es el modelo usado. ej: App\User
-    protected $ws_base_uri;
-    protected $ws_credentials;
+    protected $rest_base_uri;
+    protected $rest_credentials;
 
 
     public function __construct($model)
     {
         $this->model = $model;
-        $this->ws_base_uri = env('DIRDOC_WS_BASE_URI', 'https://sepa.utem.cl/autenticador-dirdoc-ws/api/rest/');
-        $this->ws_credentials = array(
+        $this->rest_base_uri = env('DIRDOC_REST_BASE_URI', 'https://sepa.utem.cl/autenticador-dirdoc-ws/api/rest/');
+        $this->rest_credentials = array(
             env('DIRDOC_REST_USERNAME', '1111-1'),
             env('DIRDOC_REST_PASSWORD', '1111-1')
         );
@@ -37,13 +37,13 @@ class DirdocUserProvider implements UserProviderInterface
         $user = $query->first();
         if (!$user) $user = $this->getGenericUser(['id' => $credentials['rut']]);
 
-        
+
         return $user;
     }
 
     public function validateCredentials(Authenticatable $user, array $credentials)
     {
-        $client = new GuzzleHttp\Client(['base_uri' => $this->ws_base_uri, 'auth' => $this->ws_credentials, 'verify' => false]); // Tenemos https, pero no hay certificados "validos"
+        $client = new GuzzleHttp\Client(['base_uri' => $this->rest_base_uri, 'auth' => $this->rest_credentials, 'verify' => false]); // Tenemos https, pero no hay certificados "validos"
 
         // Obtenemos las credenciales del usuario
         $rut = $credentials['rut']; // TODO: Una mejor forma de obtener los identificadores?
