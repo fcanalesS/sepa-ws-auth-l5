@@ -3,17 +3,38 @@
 use Illuminate\Contracts\Auth\User as UserContract;
 use Illuminate\Contracts\Auth\UserProvider as UserProviderInterface;
 use Illuminate\Contracts\Auth\Authenticatable;
-use Illuminate\Auth\GenericUser;
 use GuzzleHttp;
 
 class DirdocUserProvider implements UserProviderInterface
 {
 
-    protected $model; // Un string de perros indicando cual es el modelo usado. ej: App\User
+    /**
+     * El modelo Eloquent
+     *
+     * @var string
+     */
+    protected $model;
+
+    /**
+     * La uri del servicio REST
+     *
+     * @var string
+     */
     protected $rest_base_uri;
+
+    /**
+     * Las credenciales del servicio REST
+     *
+     * @var array
+     */
     protected $rest_credentials;
 
-
+    /**
+     * Crea el proveedor de usuario
+     *
+     * @param string $model
+     * @return void
+     */
     public function __construct($model)
     {
         $this->model = $model;
@@ -24,23 +45,26 @@ class DirdocUserProvider implements UserProviderInterface
         );
     }
 
+    /**
+     * Trae un usuario por credenciales
+     *
+     * @param array $credentials
+     * @return \Illuminate\Contracts\Auth\Authenticatable
+     */
     public function retrieveByCredentials(array $credentials)
     {
-        $query = $this->createModel()->newQuery();
+        $rut = \UTEM\Utils\Rut::isRut($credentials['rut']) ? \UTEM\Utils\Rut::rut($credentials['rut']) : $credentials['rut'];
 
-        foreach ($credentials as $key => $value) {
-            if (!str_contains($key, 'password')) {
-                if (str_contains($key, 'rut')) $value = \UTEM\Utils\Rut::rut($value);
-                $query->where($key, $value);
-            }
-        }
-        $user = $query->first();
-        if (!$user) $user = $this->getGenericUser(['id' => $credentials['rut']]);
-
-
-        return $user;
+        return $this->createModel()->findOrCreate($rut);
     }
 
+    /**
+     * Checkea la validez de las credenciales del usuario
+     *
+     * @param \Illuminate\Contracts\Auth\Authenticatable $user
+     * @param array $credentials
+     * @return bool
+     */
     public function validateCredentials(Authenticatable $user, array $credentials)
     {
         $client = new GuzzleHttp\Client(['base_uri' => $this->rest_base_uri, 'auth' => $this->rest_credentials, 'verify' => false]); // Tenemos https, pero no hay certificados "validos"
@@ -62,17 +86,15 @@ class DirdocUserProvider implements UserProviderInterface
         $data = json_decode($req->getBody(), true);
         $respuesta = $data['resultado'];
 
-        if (is_a($user, '\Illuminate\Auth\GenericUser')) // Nos llego un GenericUser, persistamos al usuario en DB
-        {
-            $user = $this->createModel(); // Nueva instancia del modelo
-            $rut = \UTEM\Utils\Rut::rut($rut); // Pasa el rut a integer
-            $user->rut = $rut;
-            $user->save();
-        } // Si no es un GenericUser, implica que ya estaba en DB, continuamos ...
-
         return (bool)$respuesta;
     }
 
+    /**
+     * Trae un usuario por id (rut)
+     *
+     * @param string $identifier
+     * @return \Illuminate\Contracts\Auth\Authenticatable
+     */
     public function retrieveById($identifier)
     {
         $user = $this->createModel();
@@ -81,32 +103,44 @@ class DirdocUserProvider implements UserProviderInterface
         return $user->findOrCreate($rut); // Si o si creamos un usuario, ya que no hay forma de saber si el user esta en dirdoc
     }
 
+    /**
+     * Trae a un usuario usando su token de "remember me" e identificador
+     *
+     * @param string $identifier
+     * @param string $token
+     * @return \Illuminate\Contracts\Auth\Authenticatable|null
+     */
     public function retrieveByToken($identifier, $token)
     {
         $model = $this->createModel();
         $rut = \UTEM\Utils\Rut::isRut($identifier) ? \UTEM\Utils\Rut::rut($identifier) : $identifier;
         return $model->newQuery()
-            ->where($model->getKeyName(), $identifier)
+            ->where($model->getKeyName(), $rut)
             ->where($model->getRememberTokenName(), $token)
             ->first();
     }
 
+    /**
+     * Actualiza el token "remember me"
+     *
+     * @param Authenticatable $user
+     * @param string $token
+     * @return void
+     */
     public function updateRememberToken(Authenticatable $user, $token)
     {
         $user->setRememberToken($token);
         $user->save();
     }
 
+    /**
+     * Crea una nueva instancia del modelo
+     *
+     * @return \Illuminate\Database\Eloquent\Model
+     */
     public function createModel()
     {
         $class = '\\' . ltrim($this->model, '\\');
         return new $class;
-    }
-
-    public function getGenericUser($user)
-    {
-        if ($user !== null) {
-            return new GenericUser((array)$user);
-        }
     }
 }
