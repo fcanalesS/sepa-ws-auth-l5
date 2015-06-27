@@ -1,6 +1,6 @@
 # sepa-ws-auth-l5
 
-Proyecto para dar soporte de autenticación usando el (autenticador dirdoc)[https://sepa.utem.cl/autenticador-dirdoc-portal] en Laravel 5.
+Proyecto para dar soporte de autenticación usando el [autenticador dirdoc](https://sepa.utem.cl/autenticador-dirdoc-portal) en Laravel 5.
 
 ## Instalación
 
