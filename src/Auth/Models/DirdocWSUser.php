@@ -13,7 +13,7 @@ class DirdocWSUser extends Model implements AuthenticatableContract
 
     protected $table = 'usuarios';
     protected $primaryKey = 'rut';
-    protected $incrementing = false;
+    public $incrementing = false;
 
     protected $fillable = ['rut', 'nombres', 'apellidos', 'email'];
 }
