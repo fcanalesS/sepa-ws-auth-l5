@@ -16,10 +16,10 @@ class DirdocUserProvider implements UserProviderInterface {
     public function __construct($model)
     {
         $this->model = $model;
-        $this->ws_base_uri = env('DIRDOC_WS_BASE_URI', 'https://sepa.utem.cl/saap-rest/api/');
+        $this->ws_base_uri = env('DIRDOC_WS_BASE_URI', 'https://sepa.utem.cl/autenticador-dirdoc-ws/api/rest/');
         $this->ws_credentials = array(
-            env('DIRDOC_WS_USERNAME', '1111-1'),
-            env('DIRDOC_WS_PASSWORD', '1111-1')
+            env('DIRDOC_REST_USERNAME', '1111-1'),
+            env('DIRDOC_REST_PASSWORD', '1111-1')
         );
     }
 
@@ -60,18 +60,13 @@ class DirdocUserProvider implements UserProviderInterface {
         }
            
         $data = json_decode($req->getBody(), true);
-        $respuesta = $data['respuesta'];
+        $respuesta = $data['resultado'];
         
         if(is_a($user, '\Illuminate\Auth\GenericUser')) // Nos llego un GenericUser, persistamos al usuario en DB
         {
             $user = $this->createModel(); // Nueva instancia del modelo
-            $req = $client->get(sprintf('fichaEstudiante/%s', $rut)); // Obtenemos los datos desde la fichaEstudiante // TODO: pq fichaEstudiante tiene datos de docentes?
-            $data = json_decode($req->getBody(), true);
             $rut = \UTEM\Utils\Rut::rut($rut); // Pasa el rut a integer
             $user->rut = $rut;
-            $user->nombres = $data['nombres'];
-            $user->apellidos = $data['apellidos'];
-            $user->email = $data['email'];
             $user->save();
         } // Si no es un GenericUser, implica que ya estaba en DB, continuamos ...
 
