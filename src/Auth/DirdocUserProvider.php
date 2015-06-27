@@ -37,7 +37,7 @@ class DirdocUserProvider implements UserProviderInterface
         $user = $query->first();
         if (!$user) $user = $this->getGenericUser(['id' => $credentials['rut']]);
 
-        return false;
+        
         return $user;
     }
 
