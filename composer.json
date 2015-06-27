@@ -1,21 +1,25 @@
 {
-    "name": "utem/dirdoc-auth",
-    "description": "Funciones utilitarias UTEM",
-    "license": "GPLv2",
-    "keywords": ["dirdoc", "laravel", "auth"],
-    "authors": [
-        {
-            "name": "Patricio Pérez Valverde",
-            "email": "pperez@boaboa.org"
-        }
-    ],
-    "require": {
-        "utem/utils": "^0.0.2",
-        "guzzlehttp/guzzle": "~6.0"
-    },
-    "autoload": {
-        "psr-4": {
-            "UTEM\\Dirdoc\\": "src"
-        }
+  "name": "utem/dirdoc-auth",
+  "description": "Funciones utilitarias UTEM",
+  "license": "GPLv2",
+  "keywords": [
+    "dirdoc",
+    "laravel",
+    "auth"
+  ],
+  "authors": [
+    {
+      "name": "Patricio Pérez Valverde",
+      "email": "pperez@boaboa.org"
     }
+  ],
+  "require": {
+    "utem/utils": "^0.0.2",
+    "guzzlehttp/guzzle": "~6.0"
+  },
+  "autoload": {
+    "psr-4": {
+      "UTEM\\Dirdoc\\": "src"
+    }
+  }
 }
