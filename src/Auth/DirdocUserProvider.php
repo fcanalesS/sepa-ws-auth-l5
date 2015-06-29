@@ -53,7 +53,10 @@ class DirdocUserProvider implements UserProviderInterface
      */
     public function retrieveByCredentials(array $credentials)
     {
-        $rut = \UTEM\Utils\Rut::isRut($credentials['rut']) ? \UTEM\Utils\Rut::rut($credentials['rut']) : $credentials['rut'];
+        if (!\UTEM\Utils\Rut::isRut($credentials['rut'])) {
+            return null; // Si el rut es invalido nos negamos a autenticar
+        }
+        $rut = \UTEM\Utils\Rut::rut($credentials['rut']);
 
         return $this->createModel()->firstOrCreate(['rut' => $rut]);
     }
