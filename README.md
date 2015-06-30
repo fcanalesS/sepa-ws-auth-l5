@@ -4,23 +4,10 @@ Proyecto para dar soporte de autenticación usando el [autenticador dirdoc](http
 
 ## Instalación
 
-Para instalarlo en el proyecto partimos con añadir un repositorio a nuestro `composer.json`:
-
-~~~json
-...
-        "repositories": [
-                {
-                    "type": "vcs",
-                    "url": "https://github.com/pperez/sepa-ws-auth-l5"
-                }
-        ],
-...
-~~~
-
-y ahora instalar la libreria:
+La libreria esta en [packagist](https://packagist.org/packages/utem/dirdoc-auth), usamos composer para instalarla:
 
 ~~~bash
-composer require utem/dirdoc-auth:dev-develop
+composer require utem/dirdoc-auth
 ~~~
 
 ## Registrarlo en los providers
@@ -38,7 +25,7 @@ Se necesita registrar el paquete en laravel, para esto agregamos lo siguiente al
 
 El paquete utiliza una tabla de usuarios para mantener registro de los usuarios loggeados con el servicio REST.
 Se incluye una migración para esto (La tabla debe tener `rut` como llave primaria).
- 
+
 ~~~bash
 php artisan vendor:publish --provider="UTEM\Dirdoc\Auth\DirdocAuthServiceProvider"
 php artisan migrate
