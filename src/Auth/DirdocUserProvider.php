@@ -4,6 +4,7 @@ use Illuminate\Contracts\Auth\User as UserContract;
 use Illuminate\Contracts\Auth\UserProvider as UserProviderInterface;
 use Illuminate\Contracts\Auth\Authenticatable;
 use GuzzleHttp;
+use Illuminate\Auth\GenericUser;
 
 class DirdocUserProvider implements UserProviderInterface
 {
@@ -49,7 +50,7 @@ class DirdocUserProvider implements UserProviderInterface
      * Trae un usuario por credenciales
      *
      * @param array $credentials
-     * @return \Illuminate\Contracts\Auth\Authenticatable
+     * @return \Illuminate\Contracts\Auth\Authenticatable|null
      */
     public function retrieveByCredentials(array $credentials)
     {
@@ -85,11 +86,21 @@ class DirdocUserProvider implements UserProviderInterface
         }
 
         $data = json_decode($req->getBody(), true);
-        $respuesta = $data['resultado'];
-        if ($respuesta) \Log::info(sprintf('Auth: Login exitoso (%s)', $rut));
+        $loginOk = $data['resultado'];
+        if ($loginOk) {
+            \Log::info(sprintf('Auth: Login exitoso (%s)', $rut));
+
+            if (is_a($user, '\Illuminate\Auth\GenericUser')) {
+                // Nos llego un GenericUser, persistamos al usuario en DB
+                $user = $this->createModel(); // Nueva instancia del modelo
+                $user->rut = \UTEM\Utils\Rut::rut($rut);
+                $user->save();
+                \Log::info(sprintf('Auth: Creada instancia de %s (rut: %s)', $this->model, $user->rut));
+            }
+        }
         else \Log::info(sprintf('Auth: Login fallido (%s)', $rut));
 
-        return (bool)$respuesta;
+        return (bool)$loginOk;
     }
 
     /**
@@ -100,9 +111,13 @@ class DirdocUserProvider implements UserProviderInterface
      */
     public function retrieveById($identifier)
     {
-        $rut = \UTEM\Utils\Rut::isRut($identifier) ? \UTEM\Utils\Rut::rut($identifier) : $identifier; // Solo queremos el rut
+        $rut = (int)($identifier); // El identificador ya viene sin el verificador
+        $user = $this->createModel()->newQuery()->find($rut);
         \Log::debug(sprintf('Auth: Logeando al rut "%s" mediante id', $rut));
-        return $this->createModel()->firstOrCreate(['rut' => $rut]); // Si o si creamos un usuario, ya que no hay forma de saber si el user esta en dirdoc
+
+        // Si el usuario ya existe en DB, lo retornamos, sino retornamos un GenericUser
+        if (!$user) $user = $this->getGenericUser(['id' => $rut]);
+        return $user;
     }
 
     /**
@@ -115,7 +130,7 @@ class DirdocUserProvider implements UserProviderInterface
     public function retrieveByToken($identifier, $token)
     {
         $model = $this->createModel();
-        $rut = \UTEM\Utils\Rut::isRut($identifier) ? \UTEM\Utils\Rut::rut($identifier) : $identifier;
+        $rut = \UTEM\Utils\Rut::rut($identifier);
         \Log::info(sprintf('Auth: Intentando login por token (%s: %s)', $rut, $token));
         return $model->newQuery()
             ->where($model->getKeyName(), $rut)
@@ -145,5 +160,19 @@ class DirdocUserProvider implements UserProviderInterface
     {
         $class = '\\' . ltrim($this->model, '\\');
         return new $class;
+    }
+
+    /**
+    * Get the generic user.
+    *
+    * @param  mixed  $user
+    * @return \Illuminate\Auth\GenericUser|null
+    */
+    protected function getGenericUser($user)
+    {
+        if ($user !== null)
+        {
+            return new GenericUser((array) $user);
+        }
     }
 }
