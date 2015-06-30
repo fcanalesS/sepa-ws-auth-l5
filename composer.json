@@ -1,6 +1,6 @@
 {
   "name": "utem/dirdoc-auth",
-  "description": "Funciones utilitarias UTEM",
+  "description": "Driver de autenticacion UTEM para Laravel 5",
   "license": "GPLv2",
   "keywords": [
     "dirdoc",
